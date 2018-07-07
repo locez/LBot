@@ -1,0 +1,16 @@
+{
+    :ws_uri => 'ws://localhost:6700',
+
+    :welcome_message => 'hello, I am LBot',
+
+    :group_config => {
+        123456789 => { 
+            :wmsg => 'this is a welcome message'
+        },
+
+        987654321 => {
+            :wmsg => 'Hello, I am updating.'
+        }
+    }
+
+}
