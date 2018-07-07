@@ -16,24 +16,81 @@ class LBot
     def at_qq qq
         "[CQ:at,qq=#{qq}] "
     end
+    # 发送私聊消息
+    def send_private_msg receiver_id, msg
+        content = {
+            :action => "send_private_msg",
+            :params => {
+                :user_id => receiver_id,
+                :message => msg 
+            }
+        }.to_json
+        @QQ.send content 
+    end
 
-    def send_group_msg group_id, reply_msg
+    # 发送群消息
+    def send_group_msg group_id, msg
         content = {
             :action => "send_group_msg",
             :params => {
                 :group_id => group_id,
-                :message => reply_msg
+                :message => msg
             }
         }.to_json
         @QQ.send content 
     end
     
-    def deal_group_msg sender_id, group_id, msg
+    # 撤回消息，仅 pro 版本支持
+    def delete_msg msg_id
+        content = {
+            :action => "delete_msg",
+            :params => {
+                :message_id => msg_id 
+            }
+        }.to_json
+        @QQ.send content 
+    end
+
+    # 踢出群成员
+    def set_group_kick group_id, user_id 
+        content = {
+            :action => "set_group_kick",
+            :params => {
+                :group_id => group_id,
+                :user_id => user_id,
+                :reject_add_request => false
+            }
+        }.to_json
+        @QQ.send content 
+    end
+
+    # 禁言群成员，单位分钟
+    def set_group_ban group_id, user_id, minutes
+        ban_time = 60 * minutes 
+        content = {
+            :action => "set_group_ban",
+            :params => {
+                :group_id => group_id,
+                :user_id => user_id,
+                :duration => ban_time
+            }
+        }.to_json
+        @QQ.send content 
+    end
+
+    # 取消禁言
+    def cancel_group_ban group_id, user_id
+        set_group_ban group_id, user_id, 0
+    end
+
+    # 群消息处理
+    def deal_group_msg sender_id, group_id, raw_msg
         #do some thing
-        content = at_qq(sender_id) + "hello I am updating!"
+        content = at_qq(sender_id) + "hello I am LBot!"
         #send_group_msg group_id, content 
     end
 
+    # 群成员增加
     def deal_group_increase sender_id, group_id
         group_config = @group_config[group_id]
         wmsg = group_config[:wmsg] if !group_config.nil? 
@@ -43,7 +100,8 @@ class LBot
         content = at_qq(sender_id) + wmsg 
         send_group_msg group_id, content 
     end
-            
+    
+    # 解析事件
     def deal_raw_msg raw_msg
         raw_msg = JSON.parse raw_msg
         post_type = raw_msg['post_type']
@@ -55,7 +113,7 @@ class LBot
                     when 'private'
                     when 'group'
                         group_id = raw_msg['group_id']
-                        deal_group_msg sender_id, group_id, msg
+                        deal_group_msg sender_id, group_id, raw_msg
                     when 'discuss'
                 end
 
@@ -76,10 +134,10 @@ class LBot
 
     def start
         EM.run do
-            ws = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/event/'
+            @event = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/event/'
             @QQ = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/api/'
 
-            ws.onmessage do |raw_msg, type|
+            @event.onmessage do |raw_msg, type|
                 puts raw_msg
                 deal_raw_msg raw_msg
             end
