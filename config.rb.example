@@ -1,5 +1,7 @@
 {
     :ws_uri => 'ws://localhost:6700',
+    
+    :X_LCTT_Token => '',
 
     :welcome_message => 'hello, I am LBot',
 

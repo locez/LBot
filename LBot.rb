@@ -2,17 +2,22 @@ require 'websocket-eventmachine-client'
 require 'webrick'
 require 'json'
 class LBot
-    def initialize
-        get_config 
-    end
+     def initialize
+         get_config 
+     end
 
-    def get_config
-        config_text = File.readlines("config.rb").join
-        config = eval(config_text)
-        @default_wmsg = config[:welcome_message]
-        @ws_uri = config[:ws_uri]
-        @group_config = config[:group_config]
-   end
+     def get_config
+         config_text = File.readlines("config.rb").join
+         config = eval(config_text)
+         @default_wmsg = config[:welcome_message]
+         @ws_uri = config[:ws_uri]
+         @group_config = config[:group_config]
+         @X_LCTT_Token = config[:X_LCTT_Token]
+     end
+
+     def X_LCTT_Token
+         @X_LCTT_Token
+     end
 
     def at_qq qq
         "[CQ:at,qq=#{qq}] "
@@ -102,35 +107,6 @@ class LBot
         send_group_msg group_id, content 
     end
     
-    # 获取群成员列表
-    def get_group_member_list group_id
-        content = {
-            :action => "get_group_member_list",
-            :params => {
-                :group_id => group_id
-            }
-        }.to_json
-        @QQ.send content
-    end
-
-    def get_qq_from_card group_id, card, &blk
-        get_group_member_list group_id
-        @QQ.onmessage do |raw_msg, type|
-            msg = JSON.parse raw_msg
-            if msg['data'] != nil && msg['data'][0] != nil && card != ""
-                member_list = msg['data']
-                qq = nil
-                member_list.each do |member|
-                    if member['card'].match card
-                        qq = member['user_id']
-                        break
-                    end
-                end
-                yield qq if block_given? && qq != nil
-            end 
-        end
-    end
-
     # 解析事件
     def deal_raw_msg raw_msg
         raw_msg = JSON.parse raw_msg
@@ -163,13 +139,26 @@ class LBot
     end
 
     class Servlet < WEBrick::HTTPServlet::AbstractServlet
-        def do_POST(req,res)
-            content = JSON.parse(req.body)
-            name = content['name']
-            info = content['info']
-            @@bot.get_qq_from_card 198889102, name do |qq|
-                @@bot.send_group_msg 198889102, @@bot.at_qq(qq)  + info
+        def do_POST req,res
+            token = req.[] "X-LCTT-Token"
+            if token != @@bot.X_LCTT_Token
+                return
             end
+            content = JSON.parse(req.body)
+            qq_list = content['qq']
+            name_list = content['name']
+            info = content['info']
+            at_string = ""
+            if !qq_list.nil?
+                qq_list.each do |qq|
+                    at_string += @@bot.at_qq(qq)
+                end
+            else
+                name_list.each do |name|
+                    at_string += "译者-@#{name} "
+                end
+            end
+            @@bot.send_group_msg 176979478, at_string + info
         end
     end
 
