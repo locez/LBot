@@ -101,6 +101,33 @@ class LBot
         send_group_msg group_id, content 
     end
     
+    # 获取群成员列表
+    def get_group_member_list group_id
+        content = {
+            :action => "get_group_member_list",
+            :params => {
+                :group_id => group_id
+            }
+        }.to_json
+        @QQ.send content
+    end
+
+    def get_qq_from_card(group_id, card, &blk)
+        get_group_member_list group_id
+        @QQ.onmessage do |raw_msg, type|
+            msg = JSON.parse raw_msg
+            member_list = msg['data']
+            qq =nil
+            member_list.each do |member|
+                if member['card'].match card
+                    qq = member['user_id']
+                    break
+                end
+            end 
+            yield qq if block_given?
+        end
+    end
+
     # 解析事件
     def deal_raw_msg raw_msg
         raw_msg = JSON.parse raw_msg
@@ -136,7 +163,7 @@ class LBot
         EM.run do
             @event = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/event/'
             @QQ = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/api/'
-
+            
             @event.onmessage do |raw_msg, type|
                 puts raw_msg
                 deal_raw_msg raw_msg
