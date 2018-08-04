@@ -1,4 +1,5 @@
 require 'websocket-eventmachine-client'
+require 'webrick'
 require 'json'
 class LBot
     def initialize
@@ -11,7 +12,7 @@ class LBot
         @default_wmsg = config[:welcome_message]
         @ws_uri = config[:ws_uri]
         @group_config = config[:group_config]
-    end
+   end
 
     def at_qq qq
         "[CQ:at,qq=#{qq}] "
@@ -112,19 +113,21 @@ class LBot
         @QQ.send content
     end
 
-    def get_qq_from_card(group_id, card, &blk)
+    def get_qq_from_card group_id, card, &blk
         get_group_member_list group_id
         @QQ.onmessage do |raw_msg, type|
             msg = JSON.parse raw_msg
-            member_list = msg['data']
-            qq =nil
-            member_list.each do |member|
-                if member['card'].match card
-                    qq = member['user_id']
-                    break
+            if msg['data'] != nil && msg['data'][0] != nil && card != ""
+                member_list = msg['data']
+                qq = nil
+                member_list.each do |member|
+                    if member['card'].match card
+                        qq = member['user_id']
+                        break
+                    end
                 end
+                yield qq if block_given? && qq != nil
             end 
-            yield qq if block_given?
         end
     end
 
@@ -159,11 +162,27 @@ class LBot
         end
     end
 
+    class Servlet < WEBrick::HTTPServlet::AbstractServlet
+        def do_POST(req,res)
+            content = JSON.parse(req.body)
+            name = content['name']
+            info = content['info']
+            @@bot.get_qq_from_card 198889102, name do |qq|
+                @@bot.send_group_msg 198889102, @@bot.at_qq(qq)  + info
+            end
+        end
+    end
+
     def start
+        Thread.new{
+            server = WEBrick::HTTPServer.new :Port => 1234
+            server.mount "/", Servlet
+            server.start
+        }
         EM.run do
             @event = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/event/'
             @QQ = WebSocket::EventMachine::Client.connect :uri => @ws_uri + '/api/'
-            
+
             @event.onmessage do |raw_msg, type|
                 puts raw_msg
                 deal_raw_msg raw_msg
@@ -172,6 +191,6 @@ class LBot
     end
 end
 
-bot = LBot.new
-bot.start
+@@bot = LBot.new
+@@bot.start
 
