@@ -148,17 +148,21 @@ class LBot
             qq_list = content['qq']
             name_list = content['name']
             info = content['info']
+            group = content['group']
+            group = 176979478 if group == "" or group.nil?
+
             at_string = ""
             if !qq_list.nil?
                 qq_list.each do |qq|
                     at_string += @@bot.at_qq(qq)
                 end
-            else
+            end
+            if !name_list.nil?
                 name_list.each do |name|
                     at_string += "译者-@#{name} "
                 end
             end
-            @@bot.send_group_msg 176979478, at_string + info
+            @@bot.send_group_msg group, at_string + info
         end
     end
 
