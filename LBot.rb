@@ -159,7 +159,7 @@ class LBot
             end
             if !name_list.nil?
                 name_list.each do |name|
-                    at_string += "译者-@#{name} "
+                    at_string += "@译者-#{name} "
                 end
             end
             @@bot.send_group_msg group, at_string + info
