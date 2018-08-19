@@ -89,13 +89,6 @@ class LBot
         set_group_ban group_id, user_id, 0
     end
 
-    # 群消息处理
-    def deal_group_msg sender_id, group_id, raw_msg
-        #do some thing
-        content = at_qq(sender_id) + "hello I am LBot!"
-        #send_group_msg group_id, content 
-    end
-
     # 群成员增加
     def deal_group_increase sender_id, group_id
         group_config = @group_config[group_id]
@@ -149,7 +142,7 @@ class LBot
             name_list = content['name']
             info = content['info']
             group = content['group']
-            group = 176979478 if group == "" or group.nil?
+            group = 198889102 if group == "" or group.nil?
 
             at_string = ""
             if !qq_list.nil?
@@ -168,7 +161,7 @@ class LBot
 
     def start
         Thread.new{
-            server = WEBrick::HTTPServer.new :Port => 1234
+            server = WEBrick::HTTPServer.new :Port => 3003
             server.mount "/", Servlet
             server.start
         }
