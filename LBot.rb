@@ -1,6 +1,7 @@
 require 'websocket-eventmachine-client'
 require 'webrick'
 require 'json'
+require './plug'
 class LBot
      def initialize
          get_config 
