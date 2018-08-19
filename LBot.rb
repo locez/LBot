@@ -1,5 +1,6 @@
 require 'websocket-eventmachine-client'
 require 'json'
+require './plug'
 class LBot
     def initialize
         get_config 
@@ -81,13 +82,6 @@ class LBot
     # 取消禁言
     def cancel_group_ban group_id, user_id
         set_group_ban group_id, user_id, 0
-    end
-
-    # 群消息处理
-    def deal_group_msg sender_id, group_id, raw_msg
-        #do some thing
-        content = at_qq(sender_id) + "hello I am LBot!"
-        #send_group_msg group_id, content 
     end
 
     # 群成员增加
