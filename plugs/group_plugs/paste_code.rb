@@ -16,8 +16,11 @@ end
 def post_code code
     privatebin = File.dirname(__FILE__) + "/../../vendor/PrivateBin-Cli/privatebin.js"
     file_name = "/tmp/privatebin" + `date '+%H:%M:%s'`
+    file_name.gsub!("\n","")
     File.open(file_name,"w+") do |f|
-        f.puts code
+        f.puts code 
+        f.flush
+        f.close 
     end 
     code_url = `#{privatebin} #{file_name}`
     code_url.gsub!(/Send.*/,"").gsub!(/Your delete.*/,"").gsub!("\n","")
