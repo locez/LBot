@@ -14,9 +14,9 @@ def paste_code sender_id, group_id, raw_msg
 end
 
 def post_code code
-    privatebin = "../../vendor/PrivateBin-Cli/privatebin.js"
+    privatebin = File.dirname(__FILE__) + "../../vendor/PrivateBin-Cli/privatebin.js"
     code_url = `echo #{code} | #{privatebin}`
-    code_url.gsub!(/Send.*/,"").gsub!(/Your delete.*/,"")
+    code_url.gsub!(/Send.*/,"").gsub!(/Your delete.*/,"").gsub!("\n","")
     code_url 
 end
 
