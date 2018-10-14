@@ -1,10 +1,9 @@
-require 'net/http'
 
 # this plug use a third vendor privatebin-cli, 
 # which means that your system should have a nodejs environment if you want to use this plug 
 
 def paste_code sender_id, group_id, raw_msg
-    keyword = /int|double|float|main|return|def|if|for|while/
+    keyword = /int|double|float|main|return|def|if|for|while|end/
     message = raw_msg['message']
     if message.scan(keyword).length >= 3 and message.length > 100
         code_url = post_code message
