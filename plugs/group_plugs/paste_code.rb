@@ -6,7 +6,7 @@ def paste_code sender_id, group_id, raw_msg
     keyword = /int|double|float|main|return|def|if|for|while|end/
     message = raw_msg['message']
     if message.scan(keyword).length >= 3 and message.length > 100
-        message.gsub!("&#91;","[").gsub!("&#93;","]").gsub!("&amp;","&")
+        message = message.gsub("&#91;","[").gsub("&#93;","]").gsub("&amp;","&")
         code_url = post_code message
         puts code_url
         send_group_msg group_id, code_url 
